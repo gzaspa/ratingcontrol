@@ -33,14 +33,14 @@ public class RatingControlDocument {
     //    @Autowired
 //    private StudentRepository studentRepository;
 
-    public RatingControlDocument(Group group, Set<Subject> subjects){
+    public RatingControlDocument(Group group){
         try {
             this.fis = new FileInputStream(TEMPLATE_PATH);
             this.document = new XWPFDocument(fis);
             this.out = new FileOutputStream( new File(RESULT_PATH));
             this.tables = document.getTables();
             this.group = group;
-            this.subjects = subjects;
+            this.subjects = group.getSubjects();
         } catch (IOException e) {
             e.printStackTrace();
         }

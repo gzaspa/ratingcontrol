@@ -5,6 +5,7 @@ import edu.chdtu.report.ratingcontrol.entity.Group;
 import edu.chdtu.report.ratingcontrol.entity.Subject;
 import edu.chdtu.report.ratingcontrol.repository.GroupRepository;
 import edu.chdtu.report.ratingcontrol.repository.SubjectRepository;
+import edu.chdtu.report.ratingcontrol.service.document.RatingControlDocument;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,9 +34,11 @@ public class DocumentController {
     }
 
     @GetMapping(path = "/ratingcontrol")
-    public @ResponseBody Group ratingControl(@RequestParam int groupId){
-        Group group = groupRepository.readGroupByIdAndSubjectSemester(groupId);
-//        Group group = groupRepository.findOne(groupId);
+    public @ResponseBody Group ratingControl(@RequestParam int groupId, @RequestParam short semester){
+        Group group = groupRepository.readGroupByIdAndSubjectSemester(semester ,groupId);
+        RatingControlDocument document = new RatingControlDocument(group);
+        document.fillTable();
+        document.closeDocument();
         return group;
     }
 }

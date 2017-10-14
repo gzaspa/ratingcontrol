@@ -6,7 +6,8 @@ function requestRatingDocument() {
         url : 'ratingcontrol',
         type: 'GET',
         data: {
-            groupId: 496
+            groupId: 496,
+            semester: 2
         },
         success : function(group) {
             $("#group").append(group.name);
