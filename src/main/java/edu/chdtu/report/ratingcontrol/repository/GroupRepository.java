@@ -9,6 +9,5 @@ import org.springframework.data.repository.query.Param;
  * Created by os199 on 12.10.2017.
  */
 public interface GroupRepository extends CrudRepository<Group, Integer> {
-    @Query("select gr from Group gr join gr.subjects su where su.semester=:semester and gr.id=:groupId")
-    public Group readGroupByIdAndSubjectSemester(@Param("semester") short semester, @Param("groupId") Integer groupId);
+
 }

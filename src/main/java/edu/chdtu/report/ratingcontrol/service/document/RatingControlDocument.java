@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.Set;
 
 public class RatingControlDocument {
-    private static final String RESULT_PATH = "C:\\Users\\os199\\Desktop\\deanoffice documents\\ratingcontrol\\rcresult.docx";
-    private static final String TEMPLATE_PATH = "C:\\Users\\os199\\Desktop\\deanoffice documents\\ratingcontrol\\rctemplate.docx";
+    private static final String RESULT_PATH = "C:\\Users\\user\\Desktop\\deanoffice documents\\ratingcontrol\\rcresult.docx";
+    private static final String TEMPLATE_PATH = "C:\\Users\\user\\Desktop\\deanoffice documents\\ratingcontrol\\rctemplate.docx";
     private static final String BY_ROW = "by row";
     private static final String BY_CELL = "by cell";
     private static final String STUDENT_INDEX_PLACEHOLDER = "%%n";
@@ -33,14 +33,14 @@ public class RatingControlDocument {
     //    @Autowired
 //    private StudentRepository studentRepository;
 
-    public RatingControlDocument(Group group){
+    public RatingControlDocument(Group group, Set<Subject> subjects){
         try {
             this.fis = new FileInputStream(TEMPLATE_PATH);
             this.document = new XWPFDocument(fis);
             this.out = new FileOutputStream( new File(RESULT_PATH));
             this.tables = document.getTables();
             this.group = group;
-            this.subjects = group.getSubjects();
+            this.subjects = subjects;
         } catch (IOException e) {
             e.printStackTrace();
         }

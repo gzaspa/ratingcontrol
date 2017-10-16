@@ -7,7 +7,7 @@ function requestRatingDocument() {
         type: 'GET',
         data: {
             groupId: 496,
-            semester: 2
+            semester: 5
         },
         success : function(group) {
             $("#group").append(group.name);

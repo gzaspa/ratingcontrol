@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by os199 on 12.10.2017.
@@ -35,8 +36,9 @@ public class DocumentController {
 
     @GetMapping(path = "/ratingcontrol")
     public @ResponseBody Group ratingControl(@RequestParam int groupId, @RequestParam short semester){
-        Group group = groupRepository.readGroupByIdAndSubjectSemester(semester ,groupId);
-        RatingControlDocument document = new RatingControlDocument(group);
+        Group group = groupRepository.findOne(groupId);
+        Set<Subject> subjects = subjectRepository.findLectureSubjectsByGroupAndSemester(groupId, semester);
+        RatingControlDocument document = new RatingControlDocument(group, subjects);
         document.fillTable();
         document.closeDocument();
         return group;
