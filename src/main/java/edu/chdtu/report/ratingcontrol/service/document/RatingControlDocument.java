@@ -6,16 +6,19 @@ import edu.chdtu.report.ratingcontrol.entity.Student;
 import edu.chdtu.report.ratingcontrol.entity.Subject;
 import org.apache.poi.xwpf.usermodel.*;
 import org.apache.xmlbeans.XmlException;
+import org.apache.xmlbeans.XmlOptions;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTBody;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTRow;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 //@Service
 public class RatingControlDocument {
-    private static final String RESULT_PATH = "C:\\Users\\user\\Desktop\\deanoffice documents\\ratingcontrol\\rcresult.docx";
+    private static final String RESULT_PATH = "C:\\Users\\user\\Desktop\\deanoffice documents\\ratingcontrol\\";
     private static final String TEMPLATE_PATH = "C:\\Users\\user\\Desktop\\deanoffice documents\\ratingcontrol\\rctemplate.docx";
     private static final String STUDENT_INDEX_PLACEHOLDER = "%%n";
     private static final String STUDENT_NAME_PLACEHOLDER = "%%studentName";
@@ -31,6 +34,7 @@ public class RatingControlDocument {
     private List<XWPFTable> tables;
     private XWPFTable table;
     private FileOutputStream out;
+    private Map<Group,Set<Subject>> data;
     private Group group;
     private Set<Subject> subjects;
     private short currentYear;
@@ -38,19 +42,40 @@ public class RatingControlDocument {
     //    @Autowired
 //    private StudentRepository studentRepository;
 
-    public RatingControlDocument(Group group, Set<Subject> subjects, short semester, short currentYear){
-        try {
-            this.fis = new FileInputStream(TEMPLATE_PATH);
-            this.document = new XWPFDocument(fis);
-            this.out = new FileOutputStream( new File(RESULT_PATH));
-            this.tables = document.getTables();
-            this.group = group;
-            this.subjects = subjects;
-            this.semester = semester;
-            this.currentYear = currentYear;
-        } catch (IOException e) {
-            e.printStackTrace();
+    public RatingControlDocument(Map<Group,Set<Subject>> data, short semester, short currentYear){
+        this.data = data;
+        this.semester = semester;
+        this.currentYear = currentYear;
+    }
+
+    public void makeDocument() {
+//        boolean first = true;
+//        CTBody body = document.getDocument().getBody();
+//        String srcString = body.xmlText();
+        for(Map.Entry<Group, Set<Subject>> entry : data.entrySet()) {
+            try {
+                group = entry.getKey();
+                subjects = entry.getValue();
+                this.fis = new FileInputStream(TEMPLATE_PATH);
+                this.document = new XWPFDocument(fis);
+                this.out = new FileOutputStream( new File(RESULT_PATH+group.getName()+".docx"));
+                this.tables = document.getTables();
+                fillDocument();
+                closeDocument();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+//            body = document.getDocument().getBody();
+//            try {
+//                appendBody(body, srcString, first);
+//            } catch (XmlException e) {
+//                e.printStackTrace();
+//            }
+//            first = false;
+//            if(!first)
+//                break;
         }
+
     }
 
     public void closeDocument(){
@@ -234,5 +259,25 @@ public class RatingControlDocument {
 
     private void fillSemester() {
         replaceTextInDocument(SEMESTER_PLACEHOLDER, "" + (semester%2==0?2:1));
+    }
+
+    private void appendBody(CTBody src, String append, boolean first) throws XmlException {
+        XmlOptions optionsOuter = new XmlOptions();
+        optionsOuter.setSaveOuter();
+        String srcString = src.xmlText();
+        String prefix = srcString.substring(0,srcString.indexOf(">")+1);
+
+        final String mainPart;
+        // exclude template itself in first appending
+        if(first) {
+            mainPart = "";
+        } else {
+            mainPart = srcString.substring(srcString.indexOf(">")+1,srcString.lastIndexOf("<"));
+        }
+
+        String suffix = srcString.substring( srcString.lastIndexOf("<") );
+        String addPart = append.substring(append.indexOf(">") + 1, append.lastIndexOf("<"));
+        CTBody makeBody = CTBody.Factory.parse(prefix+mainPart+addPart+suffix);
+        src.set(makeBody);
     }
 }

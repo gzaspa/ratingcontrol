@@ -1,6 +1,7 @@
 package edu.chdtu.report.ratingcontrol.controller;
 
 import edu.chdtu.report.ratingcontrol.controller.util.EmptyJsonResponse;
+import edu.chdtu.report.ratingcontrol.entity.CurrentYear;
 import edu.chdtu.report.ratingcontrol.entity.Group;
 import edu.chdtu.report.ratingcontrol.entity.Subject;
 import edu.chdtu.report.ratingcontrol.repository.CurrentYearRepository;
@@ -17,7 +18,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -38,13 +41,16 @@ public class DocumentController {
     }
 
     @GetMapping(path = "/ratingcontrol")
-    public @ResponseBody Group ratingControl(@RequestParam int groupId, @RequestParam short semester){
-        Group group = groupRepository.findOne(groupId);
-        Set<Subject> subjects = subjectRepository.findLectureSubjectsByGroupAndSemester(groupId, semester);
+    public @ResponseBody String ratingControl(@RequestParam short year, @RequestParam short semester){
         short currentYear = currentYearRepository.findFirst();
-        RatingControlDocument document = new RatingControlDocument(group, subjects, semester, currentYear);
-        document.fillDocument();
-        document.closeDocument();
-        return group;
+        Set<Group> groups = groupRepository.findGroupsByYear(currentYear, year);
+        Map<Group,Set<Subject>> data = new HashMap<Group,Set<Subject>>();
+        for (Group group: groups){
+            Set<Subject> subjects = subjectRepository.findLectureSubjectsByGroupAndSemester(group.getId(), (short)((year-1)*2+semester));
+            data.put(group, subjects);
+        }
+        RatingControlDocument document = new RatingControlDocument(data, semester, currentYear);
+        document.makeDocument();
+        return ""+groups.size();
     }
 }

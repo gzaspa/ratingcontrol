@@ -19,4 +19,5 @@ public class Group extends BaseEntity{
     private List<Student> students;
     @Getter @Setter @Column(name = "CREATION_YEAR") private short creationYear;
     @Getter @Setter @Column(name = "KURS") private short startYear;
+    @Getter @Setter @Column(name = "TUTION_FORM") private char tuitionForm;
 }
