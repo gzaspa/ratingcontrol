@@ -7,18 +7,23 @@ import edu.chdtu.report.ratingcontrol.entity.Subject;
 import org.apache.poi.xwpf.usermodel.*;
 import org.apache.xmlbeans.XmlException;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTRow;
+import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.util.List;
 import java.util.Set;
 
+//@Service
 public class RatingControlDocument {
-    private static final String RESULT_PATH = "C:\\Users\\os199\\Desktop\\deanoffice documents\\ratingcontrol\\rcresult.docx";
-    private static final String TEMPLATE_PATH = "C:\\Users\\os199\\Desktop\\deanoffice documents\\ratingcontrol\\rctemplate.docx";
+    private static final String RESULT_PATH = "C:\\Users\\user\\Desktop\\deanoffice documents\\ratingcontrol\\rcresult.docx";
+    private static final String TEMPLATE_PATH = "C:\\Users\\user\\Desktop\\deanoffice documents\\ratingcontrol\\rctemplate.docx";
     private static final String STUDENT_INDEX_PLACEHOLDER = "%%n";
     private static final String STUDENT_NAME_PLACEHOLDER = "%%studentName";
     private static final String SUBJECT_PLACEHOLDER = "%%subjectName";
-    private static final String COURSE_PLACEHOLDER = "%%course";
+    private static final String COURSE_PLACEHOLDER = "course";
+    private static final String YEAR_PLACEHOLDER = "year";
+    private static final String GROUP_PLACEHOLDER = "group";
+    private static final String SEMESTER_PLACEHOLDER = "semester";
     private static final int COUNT_OF_SUBJECTS_PLACEHOLDERS = 10;
 
     private FileInputStream fis;
@@ -29,10 +34,11 @@ public class RatingControlDocument {
     private Group group;
     private Set<Subject> subjects;
     private short currentYear;
+    private short semester;
     //    @Autowired
 //    private StudentRepository studentRepository;
 
-    public RatingControlDocument(Group group, Set<Subject> subjects, short currentYear){
+    public RatingControlDocument(Group group, Set<Subject> subjects, short semester, short currentYear){
         try {
             this.fis = new FileInputStream(TEMPLATE_PATH);
             this.document = new XWPFDocument(fis);
@@ -40,6 +46,7 @@ public class RatingControlDocument {
             this.tables = document.getTables();
             this.group = group;
             this.subjects = subjects;
+            this.semester = semester;
             this.currentYear = currentYear;
         } catch (IOException e) {
             e.printStackTrace();
@@ -58,6 +65,9 @@ public class RatingControlDocument {
     public void fillDocument(){
         fillTable();
         fillCourse();
+        fillYear();
+        fillGroup();
+        fillSemester();
     }
 
     private void fillTable(){
@@ -181,8 +191,9 @@ public class RatingControlDocument {
         for (XWPFParagraph p : document.getParagraphs()) {
             List<XWPFRun> runs = p.getRuns();
             if (runs != null) {
+                String text = new String();
                 for (XWPFRun r : runs) {
-                    String text = r.getText(0);
+                    text = r.getText(0);
                     if (text != null && text.contains(target)) {
                         text = text.replace(target, placement);
                         r.setText(text, 0);
@@ -192,9 +203,36 @@ public class RatingControlDocument {
         }
     }
 
+//    private void replaceTextInDocument(String target, String placement){
+//        for (XWPFParagraph p : document.getParagraphs()) {
+//            List<XWPFRun> runs = p.getRuns();
+//            if (runs != null) {
+//                String text = new String();
+//                for (XWPFRun r : runs) {
+//                    text += r.getText(0);
+//                }
+//                if (text.contains(target)) {
+//                    text = text.replace(target, placement);
+//                    p.getRuns().get(0).setText(text, 0);
+//                }
+//            }
+//        }
+//    }
+
     private void fillCourse(){
-        int course = currentYear - group.getCreationYear() + 1;
+        int course = currentYear - group.getCreationYear() + group.getStartYear();
         replaceTextInDocument(COURSE_PLACEHOLDER, ""+course);
     }
 
+    private void fillYear() {
+        replaceTextInDocument(YEAR_PLACEHOLDER, "" + currentYear+"-"+(currentYear+1));
+    }
+
+    private void fillGroup() {
+        replaceTextInDocument(GROUP_PLACEHOLDER, "" + group.getName());
+    }
+
+    private void fillSemester() {
+        replaceTextInDocument(SEMESTER_PLACEHOLDER, "" + (semester%2==0?2:1));
+    }
 }

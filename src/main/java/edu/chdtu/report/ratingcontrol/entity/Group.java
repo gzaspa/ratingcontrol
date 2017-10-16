@@ -18,4 +18,5 @@ public class Group extends BaseEntity{
     @Where(clause="students0_.active1 = 'T'")
     private List<Student> students;
     @Getter @Setter @Column(name = "CREATION_YEAR") private short creationYear;
+    @Getter @Setter @Column(name = "KURS") private short startYear;
 }

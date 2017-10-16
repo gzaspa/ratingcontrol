@@ -42,7 +42,7 @@ public class DocumentController {
         Group group = groupRepository.findOne(groupId);
         Set<Subject> subjects = subjectRepository.findLectureSubjectsByGroupAndSemester(groupId, semester);
         short currentYear = currentYearRepository.findFirst();
-        RatingControlDocument document = new RatingControlDocument(group, subjects, currentYear);
+        RatingControlDocument document = new RatingControlDocument(group, subjects, semester, currentYear);
         document.fillDocument();
         document.closeDocument();
         return group;
