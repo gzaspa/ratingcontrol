@@ -17,5 +17,5 @@ public class Group extends BaseEntity{
     @OneToMany(mappedBy = "group")
     @Where(clause="students0_.active1 = 'T'")
     private List<Student> students;
-
+    @Getter @Setter @Column(name = "CREATION_YEAR") private short creationYear;
 }

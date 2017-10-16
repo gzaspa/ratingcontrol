@@ -3,6 +3,7 @@ package edu.chdtu.report.ratingcontrol.controller;
 import edu.chdtu.report.ratingcontrol.controller.util.EmptyJsonResponse;
 import edu.chdtu.report.ratingcontrol.entity.Group;
 import edu.chdtu.report.ratingcontrol.entity.Subject;
+import edu.chdtu.report.ratingcontrol.repository.CurrentYearRepository;
 import edu.chdtu.report.ratingcontrol.repository.GroupRepository;
 import edu.chdtu.report.ratingcontrol.repository.SubjectRepository;
 import edu.chdtu.report.ratingcontrol.service.document.RatingControlDocument;
@@ -28,6 +29,8 @@ public class DocumentController {
     private GroupRepository groupRepository;
     @Autowired
     private SubjectRepository subjectRepository;
+    @Autowired
+    private CurrentYearRepository currentYearRepository;
 
     @GetMapping(path = "/")
     public String index(){
@@ -38,8 +41,9 @@ public class DocumentController {
     public @ResponseBody Group ratingControl(@RequestParam int groupId, @RequestParam short semester){
         Group group = groupRepository.findOne(groupId);
         Set<Subject> subjects = subjectRepository.findLectureSubjectsByGroupAndSemester(groupId, semester);
-        RatingControlDocument document = new RatingControlDocument(group, subjects);
-        document.fillTable();
+        short currentYear = currentYearRepository.findFirst();
+        RatingControlDocument document = new RatingControlDocument(group, subjects, currentYear);
+        document.fillDocument();
         document.closeDocument();
         return group;
     }

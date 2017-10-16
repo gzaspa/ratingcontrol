@@ -13,13 +13,12 @@ import java.util.List;
 import java.util.Set;
 
 public class RatingControlDocument {
-    private static final String RESULT_PATH = "C:\\Users\\user\\Desktop\\deanoffice documents\\ratingcontrol\\rcresult.docx";
-    private static final String TEMPLATE_PATH = "C:\\Users\\user\\Desktop\\deanoffice documents\\ratingcontrol\\rctemplate.docx";
-    private static final String BY_ROW = "by row";
-    private static final String BY_CELL = "by cell";
+    private static final String RESULT_PATH = "C:\\Users\\os199\\Desktop\\deanoffice documents\\ratingcontrol\\rcresult.docx";
+    private static final String TEMPLATE_PATH = "C:\\Users\\os199\\Desktop\\deanoffice documents\\ratingcontrol\\rctemplate.docx";
     private static final String STUDENT_INDEX_PLACEHOLDER = "%%n";
     private static final String STUDENT_NAME_PLACEHOLDER = "%%studentName";
     private static final String SUBJECT_PLACEHOLDER = "%%subjectName";
+    private static final String COURSE_PLACEHOLDER = "%%course";
     private static final int COUNT_OF_SUBJECTS_PLACEHOLDERS = 10;
 
     private FileInputStream fis;
@@ -29,11 +28,11 @@ public class RatingControlDocument {
     private FileOutputStream out;
     private Group group;
     private Set<Subject> subjects;
-
+    private short currentYear;
     //    @Autowired
 //    private StudentRepository studentRepository;
 
-    public RatingControlDocument(Group group, Set<Subject> subjects){
+    public RatingControlDocument(Group group, Set<Subject> subjects, short currentYear){
         try {
             this.fis = new FileInputStream(TEMPLATE_PATH);
             this.document = new XWPFDocument(fis);
@@ -41,6 +40,7 @@ public class RatingControlDocument {
             this.tables = document.getTables();
             this.group = group;
             this.subjects = subjects;
+            this.currentYear = currentYear;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -55,7 +55,12 @@ public class RatingControlDocument {
         }
     }
 
-    public void fillTable(){
+    public void fillDocument(){
+        fillTable();
+        fillCourse();
+    }
+
+    private void fillTable(){
 //        replaceTextInDocument();
         table = tables.get(0);
         table = replaceTextInTable(table, "%%curator", "");
@@ -185,6 +190,11 @@ public class RatingControlDocument {
                 }
             }
         }
+    }
+
+    private void fillCourse(){
+        int course = currentYear - group.getCreationYear() + 1;
+        replaceTextInDocument(COURSE_PLACEHOLDER, ""+course);
     }
 
 }
