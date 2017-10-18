@@ -5,6 +5,7 @@ import lombok.Setter;
 import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
+import java.util.List;
 import java.util.Set;
 
 
@@ -23,4 +24,7 @@ public class Subject extends BaseEntity{
             @JoinColumn(name = "SUBJECT_ID", nullable = false, updatable = false) },
             inverseJoinColumns = @JoinColumn(name = "GROUP_ID"))
     private Set<Group> groups;
+    @Getter @Setter
+    @OneToMany(mappedBy = "subject")
+    List<SubjectGroup> subjectGroup;
 }

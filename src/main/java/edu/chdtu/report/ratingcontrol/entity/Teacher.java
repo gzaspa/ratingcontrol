@@ -17,4 +17,5 @@ import javax.persistence.Table;
 public class Teacher extends BaseEntity{
     @Getter @Setter @Column(name = "NAME") private String name;
     @Getter @Setter @Column(name = "SURNAME") private String surname;
+    @Getter @Setter @Column(name = "PATRONIMIC") private String patronimic;
 }

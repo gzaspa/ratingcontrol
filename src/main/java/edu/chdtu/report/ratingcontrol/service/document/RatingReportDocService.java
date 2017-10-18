@@ -1,14 +1,16 @@
 package edu.chdtu.report.ratingcontrol.service.document;
 
 
-import edu.chdtu.report.ratingcontrol.entity.Group;
-import edu.chdtu.report.ratingcontrol.entity.Student;
-import edu.chdtu.report.ratingcontrol.entity.Subject;
+import edu.chdtu.report.ratingcontrol.entity.*;
+import edu.chdtu.report.ratingcontrol.repository.CurrentYearRepository;
+import edu.chdtu.report.ratingcontrol.repository.GroupRepository;
+import edu.chdtu.report.ratingcontrol.repository.SubjectGroupRepository;
 import org.apache.poi.xwpf.usermodel.*;
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlOptions;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTBody;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTRow;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -16,49 +18,51 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-//@Service
-public class RatingControlDocument {
+@Service
+public class RatingReportDocService {
     private static final String RESULT_PATH = "C:\\Users\\user\\Desktop\\deanoffice documents\\ratingcontrol\\";
     private static final String TEMPLATE_PATH = "C:\\Users\\user\\Desktop\\deanoffice documents\\ratingcontrol\\rctemplate.docx";
     private static final String STUDENT_INDEX_PLACEHOLDER = "%%n";
     private static final String STUDENT_NAME_PLACEHOLDER = "%%studentName";
     private static final String SUBJECT_PLACEHOLDER = "%%subjectName";
-    private static final String COURSE_PLACEHOLDER = "course";
+    private static final String TEACHER_PLACEHOLDER = "teacher";
+    private static final String COURSE_PLACEHOLDER = "%course";
     private static final String YEAR_PLACEHOLDER = "year";
     private static final String GROUP_PLACEHOLDER = "group";
     private static final String SEMESTER_PLACEHOLDER = "semester";
     private static final int COUNT_OF_SUBJECTS_PLACEHOLDERS = 10;
+
+    @Autowired
+    private GroupRepository groupRepository;
+    @Autowired
+    private SubjectGroupRepository subjectGroupRepository;
+    @Autowired
+    private CurrentYearRepository currentYearRepository;
 
     private FileInputStream fis;
     private XWPFDocument document;
     private List<XWPFTable> tables;
     private XWPFTable table;
     private FileOutputStream out;
-    private Map<Group,Set<Subject>> data;
+    private Set<SubjectGroup> subjectsGroup;
     private Group group;
-    private Set<Subject> subjects;
-    private short currentYear;
     private short semester;
-    //    @Autowired
-//    private StudentRepository studentRepository;
+    private short currentYear;
 
-    public RatingControlDocument(Map<Group,Set<Subject>> data, short semester, short currentYear){
-        this.data = data;
-        this.semester = semester;
-        this.currentYear = currentYear;
-    }
-
-    public void makeDocument() {
+    public void makeDocument(short year, short semester) {
 //        boolean first = true;
 //        CTBody body = document.getDocument().getBody();
 //        String srcString = body.xmlText();
-        for(Map.Entry<Group, Set<Subject>> entry : data.entrySet()) {
+        this.semester = semester;
+        this.currentYear = currentYearRepository.findFirst();
+        Set<Group> groups = groupRepository.findGroupsByYear(currentYear, year);
+        for(Group group: groups) {
+            this.group = group;
+            this.subjectsGroup = subjectGroupRepository.findLectureSubjectsByGroupAndSemester(group.getId(), (short)((year-1)*2+semester));
             try {
-                group = entry.getKey();
-                subjects = entry.getValue();
                 this.fis = new FileInputStream(TEMPLATE_PATH);
                 this.document = new XWPFDocument(fis);
-                this.out = new FileOutputStream( new File(RESULT_PATH+group.getName()+".docx"));
+                this.out = new FileOutputStream(new File(RESULT_PATH + group.getName() + ".docx"));
                 this.tables = document.getTables();
                 fillDocument();
                 closeDocument();
@@ -75,7 +79,6 @@ public class RatingControlDocument {
 //            if(!first)
 //                break;
         }
-
     }
 
     public void closeDocument(){
@@ -101,6 +104,7 @@ public class RatingControlDocument {
         table = replaceTextInTable(table, "%%curator", "");
         addStudentRows(group.getStudents());
         replaceSubjects();
+        replaceTeachers();
     }
 
     private XWPFTable replaceTextInTable(XWPFTable tbl, String target, String replacement){
@@ -144,12 +148,26 @@ public class RatingControlDocument {
     }
 
     private void replaceSubjects(){
-        for (Subject subject: subjects){
-            replaceTextInTable(table, SUBJECT_PLACEHOLDER, subject.getName());
+        for (SubjectGroup subjectGroup: subjectsGroup){
+            replaceTextInTable(table, SUBJECT_PLACEHOLDER, subjectGroup.getSubject().getName());
         }
         XWPFTableRow subjectsRow = findRowByPlaceholder(table, SUBJECT_PLACEHOLDER);
-        for (int i = 0; i<COUNT_OF_SUBJECTS_PLACEHOLDERS-subjects.size(); i++) {
+        for (int i = 0; i<COUNT_OF_SUBJECTS_PLACEHOLDERS-subjectsGroup.size(); i++) {
             replaceTextInCell(subjectsRow, SUBJECT_PLACEHOLDER, "");
+        }
+    }
+
+    private void replaceTeachers(){
+        for (SubjectGroup subjectGroup: subjectsGroup){
+            Teacher teacher = subjectGroup.getTeacher();
+            String teacherName = "";
+            if (teacher != null)
+                teacherName = teacher.getSurname()+" "+teacher.getName().substring(0,1)+"."+teacher.getPatronimic().substring(0,1)+".";
+            replaceTextInTable(table, TEACHER_PLACEHOLDER, teacherName);
+        }
+        XWPFTableRow subjectsRow = findRowByPlaceholder(table, TEACHER_PLACEHOLDER);
+        for (int i = 0; i<COUNT_OF_SUBJECTS_PLACEHOLDERS-subjectsGroup.size(); i++) {
+            replaceTextInCell(subjectsRow, TEACHER_PLACEHOLDER, "");
         }
     }
 
@@ -250,7 +268,7 @@ public class RatingControlDocument {
     }
 
     private void fillYear() {
-        replaceTextInDocument(YEAR_PLACEHOLDER, "" + currentYear+"-"+(currentYear+1));
+        replaceTextInDocument(YEAR_PLACEHOLDER, "" + currentYear+"/"+(currentYear+1));
     }
 
     private void fillGroup() {

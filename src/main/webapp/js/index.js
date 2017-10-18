@@ -6,8 +6,8 @@ function requestRatingDocument() {
         url : 'ratingcontrol',
         type: 'GET',
         data: {
-            year: 4,
-            semester: 1
+            year: $("#year").val(),
+            semester: $("#semester").val()
         },
         success : function(group) {
             $("#group").append(group);

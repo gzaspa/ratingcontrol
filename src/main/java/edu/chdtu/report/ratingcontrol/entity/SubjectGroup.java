@@ -29,4 +29,8 @@ public class SubjectGroup implements Serializable {
     @JoinColumn (name = "GROUP_ID")
     private Group group;
 
+    @Getter @Setter
+    @ManyToOne
+    @JoinColumn (name = "TEACHER_ID")
+    private Teacher teacher;
 }
